@@ -4,7 +4,7 @@
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
 # $Revision: 1.0.1 $
-# $Date 2017-03-28 09:02:15$
+# $Date 2017-04-06 15:28:45$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 
 #------------------------------------------------------------------------------
@@ -511,8 +511,30 @@ stopInstances()
 			result=$?
 			if [ $result -eq 0 ]
 			then
-				log INFO "Instance ${instance} shut down successfully. Clearing flag"
-				rm -f $SCRIPT_DIR/${instance}_started
+				LOOP_ITERACTION=1
+				RC=1
+				while [ ${LOOP_ITERACTION} -le ${CDC_LOOP_LIMIT} ]
+				do	
+					instanceActive ${instance}
+					if [ $? != 0 ]
+					then
+						#Instance is already stopped
+						RC=0
+						break
+					else
+						#Instance is still running. Keep waiting
+						sleep $CDC_LOOP_INTERVAL &
+						wait
+					fi
+					LOOP_ITERACTION=`expr $LOOP_ITERACTION + 1`
+				done
+				if [ $RC = 0 ]
+				then
+					log INFO "Instance ${instance} shut down successfully. Clearing flag"
+					rm -f $SCRIPT_DIR/${instance}_started
+				else
+					log WARNING "Instance ${instance} failed to shut down successfully"
+				fi
 			else
 				log WARNING "Instance ${instance} failed to shut down successfully with error code $result"
 			fi
