@@ -1,11 +1,13 @@
 #!/bin/ksh
-# Copyright (c) 2017 Fernando Nunes - fernando.nunes@pt.ibm.com
+#------------------------------------------------------------------------------
+# Copyright (c) 2017 Fernando Nunes
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.1 $
-# $Date 2017-04-06 15:28:45$
+# $Revision: 1.0.3 $
+# $Date 2017-04-19 23:20:50$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # Function definitions
@@ -22,7 +24,7 @@ show_help()
 	echo "               -h shows this help"
 	echo "               -I defines list of comma separated instance names"
 	echo "               -c cleans staging store"
-	echo "               -r restores latest metadatab backup"
+	echo "               -r restores latest metadata backup"
 	echo "               -t clean transaction queues"
 	echo "               -m Y starts subscriptions on start"
 	echo "               -m N don't start subscriptions on start"
@@ -53,7 +55,7 @@ get_args()
                 I)   # set up the -i instances list
 			INSTANCES_FLAG=1
 			INSTANCES=$OPTARG
-			echo ${INSTANCES} | egrep "^[a-zA-Z][a-zA-Z0-9\-_]*(,[a-zA-Z][a-zA-Z0-9\-_])*" 1>/dev/null 2>/dev/null
+			echo ${INSTANCES} | egrep '^[a-zA-Z][a-zA-Z0-9_-]*(,[a-zA-Z][a-zA-Z0-9_-])*$' 1>/dev/null 2>/dev/null
 			RES=$?
 			if [ "X${RES}" != "X0" ]
 			then
@@ -589,10 +591,6 @@ start()
 		done
 	fi
 	
-	for instance in ${LIST_INSTANCES}
-	do
-		BackupProcess $instance start
-	done
 }
 
 #------------------------------------------------------------------------------
@@ -602,11 +600,6 @@ start()
 
 stopFunc()
 {
-	for s_instance in ${LIST_INSTANCES}
-	do
-		# Stop the backup background process and remove the PID file
-		BackupProcess $s_instance stop
-	done
 
 	if [ ${STOP_MIRRORING_FLAG} = "Y" -o ${STOP_MIRRORING_FLAG} = "F" ]
 	then
@@ -726,7 +719,7 @@ clean_up()
 
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.1 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.3 $" | cut -f2 -d' '`
 export MYUSER=`id -u -n`
 LOGUID=`id -u`
 cmdOut=/tmp/$PROGNAME.$$.tmp
@@ -756,6 +749,18 @@ then
 else
 	echo "Cannot include functions file ($SCRIPT_DIR/include/functions.sh). Exiting!"
 	exit 1
+fi
+
+if [ ! -d ${LOG_DIR} ]
+then
+	log ERROR "Log dir (${LOG_DIR}) does not exist. Exiting!"
+	exit 1
+else
+	if [ ! -w ${LOG_DIR} ]
+	then
+		log ERROR "Log dir (${LOG_DIR}) is not writable. Exiting!"
+		exit 1
+	fi
 fi
 
 NUM_ARGUMENTS=$#
@@ -895,8 +900,8 @@ clean)
 	
 esac
 
-
 log INFO "Command $0 executed with ${ACTION} action and parameters: $*"
+log INFO "SCRIPT DIR = ${SCRIPT_DIR}"
 log INFO "Local file system: ${CDC_HOME_LOCAL_FS}"
 log INFO "Shared file system: ${cdc_home_shared_fs}"
 log INFO "User: ${MYUSER}"
@@ -918,7 +923,9 @@ status)
 	status
 	;;
 *)
-echo "Usage: $0 start|stop|status|clean"
+	show_help
+	log INFO "Exiting"
 	exit 1
 	;;
 esac
+log INFO "Exiting"
