@@ -4,8 +4,8 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.12 $
-# $Date 2017-04-24 15:58:50$
+# $Revision: 1.0.16 $
+# $Date 2017-04-24 17:43:21$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #---------------------------------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ get_args()
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.12 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.16 $" | cut -f2 -d' '`
 
 
 # Read the settings from the properties file
@@ -99,28 +99,7 @@ if [ -x  "${SCRIPT_DIR}/include/functions.sh" ]
 then
 	. "${SCRIPT_DIR}/include/functions.sh"
 else
-	echo "Cannot include functions file (${SCRIPT_DIR}/include/functions.sh). Exiting!"
-	exit 1
-fi
-
-log INFO "$$ Command $0 executed with parameters: $*"
-log INFO "$$ SCRIPT DIR = ${SCRIPT_DIR}"
-log INFO "$$ Local file system: ${CDC_HOME_LOCAL_FS}"
-log INFO "$$ Version: ${VERSION}"
-
-NUM_ARGUMENTS=$#
-get_args $*
-if [ $? != 0 ]
-then
-	show_help >&2
-	log INFO "$$ Exiting!"
-	exit 1
-fi
-
-
-if [ "X${SIZE_FLAG}" != "X1" ]
-then
-	log ERROR "$$ Size (-s parameter) not provided. Exiting!"
+	echo "Cannot include functions file (${SCRIPT_DIR}/include/functions.sh). Exiting!" >&2
 	exit 1
 fi
 
@@ -135,6 +114,28 @@ then
 	log ERROR "$$ Log dir (${LOG_DIR}) does not exist or is not a directory. Exiting"
 	exit 1
 fi
+
+log INFO "$$ Command $0 executed with parameters: $*"
+log INFO "$$ SCRIPT DIR = ${SCRIPT_DIR}"
+log INFO "$$ Local file system: ${CDC_HOME_LOCAL_FS}"
+log INFO "$$ Version: ${VERSION}"
+
+NUM_ARGUMENTS=$#
+get_args $*
+if [ $? != 0 ]
+then
+	show_help >&2
+	log ERROR "$$ Invalid parameters. Exiting!"
+	exit 1
+fi
+
+
+if [ "X${SIZE_FLAG}" != "X1" ]
+then
+	log ERROR "$$ Size (-s parameter) not provided. Exiting!"
+	exit 1
+fi
+
 
 if [ "X${LOG_FILE_FLAG}" = "X1" ]
 then
