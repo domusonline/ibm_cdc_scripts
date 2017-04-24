@@ -1,0 +1,213 @@
+#!/bin/ksh
+#------------------------------------------------------------------------------
+# Copyright (c) 2017 Fernando Nunes
+# License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
+# $Author: Fernando Nunes - domusonline@gmail.com $
+# $Revision: 1.0.15 $
+# $Date 2017-04-24 17:42:59$
+# Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+# clean up...
+#------------------------------------------------------------------------------
+clean_up()
+{
+	rm -f ${TMP_FILE} ${ERR_FILE}
+}
+
+#------------------------------------------------------------------------------
+# show command syntax
+#------------------------------------------------------------------------------
+
+show_help()
+{
+	echo "${PROGNAME}: -V | -h | [-n number_txs][-l logfile]"
+	echo "               -V shows script version"
+	echo "               -h shows this help"
+	echo "               -n number_txs : captures the oldest number_txs open transactions"
+	echo "               -l logfile    : saves the transaction(s) in the specificed log file"
+	echo "Ex: ${PROGNAME} -n 1 -l last_txs.unl"
+}
+
+#------------------------------------------------------------------------------
+# parse the arguments using standard getopts function
+#------------------------------------------------------------------------------
+
+get_args()
+{
+	arg_ok="Vhn:l:"
+	while getopts ${arg_ok} OPTION
+	do
+		case ${OPTION} in
+		h)   # show help
+			show_help
+			exit 0
+			;;
+		V)      #show version
+			echo "${PROGNAME} ${VERSION}" >&1
+			exit 0
+			;;
+		n)      #number of transactions
+			TRANSACTIONS_FLAG=1
+			TRANSACTIONS=$OPTARG
+			echo $TRANSACTIONS | grep "^[0-9][0-9]*$" > /dev/null
+			if [ $? != 0 ]
+			then
+				log ERROR "$$ -n parameter must be supplied with a valid number (${TRANSACTIONS})"
+				return 1
+			fi
+			;;
+                l)      #log filename
+			LOG_FILE_FLAG=1
+			LOG_FILE=${OPTARG}
+			echo ${LOG_FILE} | grep "/" > /dev/null
+			if [ $? = 0 ]
+			then
+				log ERROR "$$ Log filename (${LOG_FILE}) must not contain directories"
+				return 1
+			fi
+			;;
+		*)
+			log ERROR "$$ Invalid parameter (${OPTION}) given"
+			return 1
+			;;
+		esac
+	done
+}
+
+
+# START
+PROGNAME=`basename $0`
+SCRIPT_DIR=`dirname $0`
+VERSION=`echo "$Revision: 1.0.15 $" | cut -f2 -d' '`
+
+
+# Read the settings from the properties file
+if [ -x "${SCRIPT_DIR}/conf/cdc.properties" ]
+then
+	. "${SCRIPT_DIR}/conf/cdc.properties"
+else
+	echo "Cannot include properties file ("${SCRIPT_DIR}/conf/cdc.properties"). Exiting!"
+	exit 1
+fi
+
+# Import general functions
+if [ -x  "${SCRIPT_DIR}/include/functions.sh" ]
+then
+	. "${SCRIPT_DIR}/include/functions.sh"
+else
+	echo "Cannot include functions file (${SCRIPT_DIR}/include/functions.sh). Exiting!"
+	exit 1
+fi
+
+if [ "X${LOG_DIR}" = "X" ]
+then
+	log ERROR "$$ Log dir is not defined. Exiting!"
+	exit 1
+fi
+
+if [ ! -d ${LOG_DIR} ]
+then
+	log ERROR "$$ Log dir (${LOG_DIR}) does not exist or is not a directory. Exiting"
+	exit 1
+fi
+
+log INFO "$$ Command $0 executed with parameters: $*"
+log INFO "$$ SCRIPT DIR = ${SCRIPT_DIR}"
+log INFO "$$ Local file system: ${CDC_HOME_LOCAL_FS}"
+log INFO "$$ Version: ${VERSION}"
+
+NUM_ARGUMENTS=$#
+get_args $*
+if [ $? != 0 ]
+then
+	show_help >&2
+	log ERROR "$$ Invalid parameters Exiting!"
+	exit 1
+fi
+
+if [ "X${TRANSACTIONS_FLAG}" = "X" ]
+then
+	TRANSACTIONS=1
+fi
+
+if [ "X${LOG_FILE_FLAG}" = "X" ]
+then
+	SPOOL_CLAUSE=""
+else
+	SPOOL_CLAUSE="spool ${TMP_FILE}"
+	LOG_FILE=${LOG_DIR}/${LOG_FILE}
+fi
+
+TMP_FILE=/tmp/${PROGNAME}_$$_tmp
+ERR_FILE=/tmp/${PROGNAME}_$$_err
+trap clean_up 0
+
+if [ -f ${SCRIPT_DIR}/.oracle_env.sh ]
+then
+	. ${SCRIPT_DIR}/.oracle_env.sh
+fi
+
+
+
+sqlplus -s $ORA_U/$ORA_P 2>${ERR_FILE} <<EOF
+set colsep '|'
+set echo off
+set feedback off
+set linesize 2000
+set pagesize 0
+set sqlprompt ''
+set trimspool on
+set headsep off
+set termout off
+$SPOOL_CLAUSE
+
+SELECT
+	to_char(SYSDATE,'YYYY-MM-DD HH24:MI:SS'),
+	t.start_scnw,t.start_scnb,
+	to_char(TO_DATE(t.start_time,'MM/DD/YY HH24:MI:SS'),'YYYY-MM-DD HH24:MI:SS'),
+        t.xid,
+        t.used_ublk * (select block_size/1024 from dba_tablespaces where tablespace_name like '%UNDO%') size_kb,
+	t.used_urec,
+	SUBSTR(o.owner,1,20) o_owner,
+	SUBSTR(o.object_name,1,32) oname,
+        t.status,
+	s.sid,
+        s.username
+FROM
+        v\$transaction t, v\$session s, v\$locked_object l, dba_objects o
+WHERE
+	t.xid IN
+	(
+		SELECT * FROM
+		(
+			SELECT
+				t1.xid AS myxid
+			FROM
+				v\$transaction t1
+			ORDER BY t1.start_time
+		)
+		WHERE
+			ROWNUM <= $TRANSACTIONS
+	) AND
+        t.ses_addr = s.saddr AND
+	s.sid = l.session_id AND
+	l.object_id = o.object_id
+ORDER BY
+        t.start_time, oname;
+EOF
+
+if [ $? != 0 ]
+then
+	log ERROR "Oracle script raised an error:"
+	promoteLog ${ERR_FILE}
+	log ERROR "Exiting!"
+	exit 1
+fi
+
+if [ "X${LOG_FILE_FLAG}" = "X1" ]
+then
+	cat ${TMP_FILE} >> ${LOG_FILE}
+fi
