@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.17 $
-# $Date 2017-04-24 17:43:46$
+# $Revision: 1.0.21 $
+# $Date 2017-04-26 14:39:19$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -103,6 +103,10 @@ get_args()
 			#	return 1
 			#fi
                         ;;
+		*)
+			log ERROR "$$ Invalid parameter (${OPTION}) given"
+			return 1
+			;;
 		esac
 	done
 	return 0
@@ -143,7 +147,7 @@ clean_up()
 
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.17 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.21 $" | cut -f2 -d' '`
 TEMP_FILE_CURR_CURLINGS=/tmp/${PROGNAME}_$$_curr_curlings.tmp
 
 trap clean_up 0
