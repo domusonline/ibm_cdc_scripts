@@ -4,8 +4,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.22 $
-# $Date 2017-04-26 14:39:50$
+# $Revision: 1.0.36 $
+# $Date 2017-04-26 20:53:33$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #--------------------------------------------------------------------------------------------------
 
@@ -309,7 +309,7 @@ TAIL_LIMIT=5000
 #-------------------------------------------------
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.22 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.36 $" | cut -f2 -d' '`
 
 TEMP_FILE_MAIL=/tmp/${PROGNAME}_mail_$$.tmp
 TEMP_FILE_BODY=/tmp/${PROGNAME}_body_$$.tmp
@@ -542,7 +542,7 @@ print COMMIT_STOP_INTERVAL
 		else
 			ALERT_COUNT=1
 		fi
-		if [ $ALERT_COUNT -le $ALERT_LIMIT ]
+		if [ $ALERT_COUNT -le $ALERT_COUNT_LIMIT ]
 		then
 			alert_mail FILE
 		fi
