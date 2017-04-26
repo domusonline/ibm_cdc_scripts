@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.29 $
-# $Date 2017-04-26 18:41:28$
+# $Revision: 1.0.34 $
+# $Date 2017-04-26 20:51:58$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -52,13 +52,19 @@ get_args()
 			;;
 		esac
 	done
+	if [ ${NUM_ARGUMENTS} -ge ${OPTIND} ]
+	then
+		log ERROR "$$ Syntax error: Too many parameters" >&2
+		return 2
+	fi
+	return 0
 }
 
 
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.29 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.34 $" | cut -f2 -d' '`
 
 ERR_FILE=/tmp/${PROGNAME}_$$_err
 trap clean_up 0
@@ -77,6 +83,7 @@ if [ -f ${SCRIPT_DIR}/.oracle_env.sh ]
 then
 	. ${SCRIPT_DIR}/.oracle_env.sh
 fi
+
 
 
 sqlplus -s $ORA_U/$ORA_P 2>${ERR_FILE} <<EOF
