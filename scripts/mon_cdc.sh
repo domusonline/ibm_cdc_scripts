@@ -3,14 +3,62 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.4 $
-# $Date 2017-04-19 23:21:41$
+# $Revision: 1.0.31 $
+# $Date 2017-04-26 20:48:54$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 
 #------------------------------------------------------------------------------
 # Function definitions
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+# show command syntax
+#------------------------------------------------------------------------------
+
+show_help()
+{
+        echo "${PROGNAME}: -V | -h | [-n number_txs] [-l logfile]"
+        echo "               -V shows script version"
+        echo "               -h shows this help"
+        echo "Ex: ${PROGNAME}"
+}
+
+#------------------------------------------------------------------------------
+# parse the arguments using standard getopts function
+#------------------------------------------------------------------------------
+
+get_args()
+{
+	arg_ok="Vh"
+	while getopts ${arg_ok} OPTION
+	do
+		case ${OPTION} in
+		h)   # show help
+         		show_help
+ 			exit 0
+			;;
+		V)      #show version
+			echo "${PROGNAME} ${VERSION}" >&1
+			exit 0
+			;;
+		*)
+			log ERROR "$$ Invalid parameter (${OPTION}) given"
+			return 1
+			;;
+		esac
+	done
+	if [ ${NUM_ARGUMENTS} -ge ${OPTIND} ]
+	then
+		log ERROR "$$ Syntax error: Too many parameters" >&2
+		return 2
+	fi
+        return 0
+}
+
+
+#------------------------------------------------------------------------------
+# parse the arguments using standard getopts function
+#------------------------------------------------------------------------------
 alert_mail()
 {
 	BODY=$1
@@ -88,7 +136,7 @@ check_instance_running()
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
 TMP_DIR=${SCRIPT_DIR}/tmp
-VERSION=`echo "$Revision: 1.0.4 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.31 $" | cut -f2 -d' '`
 
 # Read the settings from the properties file
 if [ -x $SCRIPT_DIR/conf/cdc.properties ]
@@ -133,6 +181,14 @@ else
 	fi
 fi
 
+NUM_ARGUMENTS=$#
+get_args $*
+if [ $? != 0 ]
+then
+	show_help >&2
+	log ERROR "$$ Invalid parameters. Exiting!"
+	exit 1
+fi
 
 ALARM_COUNT=0
 
