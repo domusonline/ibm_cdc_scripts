@@ -5,8 +5,8 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.10 $
-# $Date 2017-04-24 15:52:28$
+# $Revision: 1.0.24 $
+# $Date 2017-04-26 14:45:56$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #---------------------------------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ get_instance_dir()
 		else
 			if [ ! -d ${CDC_HOME_LOCAL_FS} ]
 			then
-				printf "ERROR: get_instance_dir() called but CDC_HOME_LOCAL_FS (${CDC_HOME_LOCAL_FS}) doesnt look to be a directory\n" >&2
+				printf "ERROR: get_instance_dir() called but CDC_HOME_LOCAL_FS (${CDC_HOME_LOCAL_FS}) doesn't look to be a directory\n" >&2
 				return 1
 			fi
 		fi
