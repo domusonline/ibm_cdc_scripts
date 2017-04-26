@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.14 $
-# $Date 2017-04-24 17:42:36$
+# $Revision: 1.0.20 $
+# $Date 2017-04-26 14:37:32$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -93,6 +93,10 @@ get_args()
 			#	return 1
 			#fi
 			;;
+		*)
+			log ERROR "$$ Invalid parameter (${OPTION}) given"
+			return 1
+			;;
 		esac
 	done
 	return 0
@@ -110,26 +114,26 @@ clean_up()
 
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.14 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.20 $" | cut -f2 -d' '`
 TEMP_FILE_1=/tmp/${PROGNAME}_$$.tmp
 
 trap clean_up 0
 
 # Read the settings from the properties file
-if [ -x $SCRIPT_DIR/conf/cdc.properties ]
+if [ -x ${SCRIPT_DIR}/conf/cdc.properties ]
 then
-	. $SCRIPT_DIR/conf/cdc.properties
+	. ${SCRIPT_DIR}/conf/cdc.properties
 else
-	log ERROR "$$ Cannot include properties file ($SCRIPT_DIR/conf/cdc.properties). Exiting!"
+	log ERROR "$$ Cannot include properties file (${SCRIPT_DIR}/conf/cdc.properties). Exiting!"
 	exit 1
 fi
 
 # Import general functions
-if [ -x  "$SCRIPT_DIR/include/functions.sh" ]
+if [ -x  "${SCRIPT_DIR}/include/functions.sh" ]
 then
-	. "$SCRIPT_DIR/include/functions.sh"
+	. "${SCRIPT_DIR}/include/functions.sh"
 else
-	log ERROR "$$ Cannot include functions file ($SCRIPT_DIR/include/functions.sh). Exiting!"
+	log ERROR "$$ Cannot include functions file (${SCRIPT_DIR}/include/functions.sh). Exiting!"
 	exit 1
 fi
 
