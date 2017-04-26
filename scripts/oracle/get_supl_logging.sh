@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.19 $
-# $Date 2017-04-24 18:51:54$
+# $Revision: 1.0.29 $
+# $Date 2017-04-26 18:41:28$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -58,7 +58,7 @@ get_args()
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.19 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.29 $" | cut -f2 -d' '`
 
 ERR_FILE=/tmp/${PROGNAME}_$$_err
 trap clean_up 0
@@ -79,22 +79,22 @@ then
 fi
 
 
-sqlplus $ORA_U/$ORA_P 2>${ERR_FILE} <<EOF
+sqlplus -s $ORA_U/$ORA_P 2>${ERR_FILE} <<EOF
 set colsep '|'
 set echo off
 set feedback off
 set linesize 200
-set pagesize 0
+--set pagesize 0
 set sqlprompt ''
-set trimspool on
-set headsep off
+--set trimspool on
+--set headsep off
 set termout off
 
 SELECT
-	SUPPLEMENTAL_LOG_DATA_MIN,
-	SUPPLEMENTAL_LOG_DATA_PK,
-	SUPPLEMENTAL_LOG_DATA_FK,
-	SUPPLEMENTAL_LOG_DATA_UI
+	SUPPLEMENTAL_LOG_DATA_MIN MINIMAL,
+	SUPPLEMENTAL_LOG_DATA_PK PK,
+	SUPPLEMENTAL_LOG_DATA_FK FK,
+	SUPPLEMENTAL_LOG_DATA_UI UI
 FROM
 	v\$database;
 EOF
