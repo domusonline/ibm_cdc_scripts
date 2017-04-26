@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.21 $
-# $Date 2017-04-26 14:39:19$
+# $Revision: 1.0.27 $
+# $Date 2017-04-26 16:53:40$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ clean_up()
 
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.21 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.27 $" | cut -f2 -d' '`
 TEMP_FILE_CURR_CURLINGS=/tmp/${PROGNAME}_$$_curr_curlings.tmp
 
 trap clean_up 0
@@ -254,7 +254,8 @@ do
 
 	SUBSCRIPTION_LIST=`generate_subs_list $INSTANCE ANY`
 
-	tail -$MASTER_CURLING_LOG_LINES $FILE | egrep -e " LOG READER.*com.datamirror.ts.util.oracle.OracleRedoNativeApi.*(Completed archive redo log file|Completed online redo log file)" -e "has started using the single scrape staging store" | gawk -v CURR_CURLING_FILE=$TEMP_FILE_CURR_CURLINGS $COUNT_AWK_FLAG $LOCKED_AWK_FLAG -v MASTER_CURLING_LOG_MARGIN=$MASTER_CURLING_LOG_MARGIN -v SUBSCRIPTION_LIST="$SUBSCRIPTION_LIST" '
+#144402  2017-04-26 14:51:15.726 RTKS14 LOG READER{47950}        com.datamirror.ts.util.TsThread run()   Thread end normal
+	tail -$MASTER_CURLING_LOG_LINES $FILE | egrep -e " LOG READER.*com.datamirror.ts.util.oracle.OracleRedoNativeApi.*(Completed archive redo log file|Completed online redo log file)" -e "has started using the single scrape staging store" -e "LOG READER\{.*Thread end normal" | gawk -v CURR_CURLING_FILE=$TEMP_FILE_CURR_CURLINGS $COUNT_AWK_FLAG $LOCKED_AWK_FLAG -v MASTER_CURLING_LOG_MARGIN=$MASTER_CURLING_LOG_MARGIN -v SUBSCRIPTION_LIST="$SUBSCRIPTION_LIST" '
 	
 	function add_to_start(l_sub)
 	{
@@ -367,23 +368,31 @@ do
 		}
 		else
 		{
-			SUB=$4
-			if (! (SUB in SUBSCRIPTION_LIST_ARR ) )
-				next
-			
-			if ( $0 ~ /Completed archive/ )
+			if ( $0 ~ /LOG READER.*Thread end normal$/ )
 			{
-				LOG=$31
-				gsub(/\./,"",LOG)
+				SUB=$4
+				LOG=-1
 			}
 			else
 			{
-				if ( $0 ~ /Completed online/ )
-					LOG=-1
+				SUB=$4
+				if (! (SUB in SUBSCRIPTION_LIST_ARR ) )
+					next
+				
+				if ( $0 ~ /Completed archive/ )
+				{
+					LOG=$31
+					gsub(/\./,"",LOG)
+				}
 				else
 				{
-					print "Invalid line!"
-					exit 1
+					if ( $0 ~ /Completed online/ )
+						LOG=-1
+					else
+					{
+						print "Invalid line!"
+						exit 1
+					}
 				}
 			}
 		}

@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.20 $
-# $Date 2017-04-26 14:37:32$
+# $Revision: 1.0.27 $
+# $Date 2017-04-26 16:53:40$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -114,7 +114,7 @@ clean_up()
 
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.20 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.27 $" | cut -f2 -d' '`
 TEMP_FILE_1=/tmp/${PROGNAME}_$$.tmp
 
 trap clean_up 0
@@ -212,7 +212,7 @@ do
 
 #140509  2017-03-15 13:12:21.091 SHAREDSCRAPE{110}       com.datamirror.ts.eventlog.EventLogger  logActualEvent()        Event logged: ID=2922 MSG=Subscription RTKS06 has started using the single scrape staging store. Subscription bookmark: Journal name JOURNAL Journal bookmark 000308;8666272196871;8666537600436.1.1.4043238.108.1;8666537600436.1.1.4043238.108.1.0| Staging store oldest bookmark: Journal name JOURNAL Journal bookmark 000308;8666272196871;8666537591747.1.1.4020119.200.1;8666537591744.1.1.4020111.456.1.0| Staging store newest bookmark: Journal name JOURNAL Journal bookmark 000308;8666272196871;8666537601308.1.1.4044752.436.1;8666537601308.1.1.4044752.436.1.0|
 #                                 $SUBS LOG READER.*com.datamirror.ts.util.oracle.OracleRedoNativeApi.*(Completed archive redo log file|Completed online redo log file)"
-	tail -${SINGLE_CURLING_LOG_LINES} $FILE | egrep -u -e "$SUBSCRIPTION has started using the single scrape staging store" -e "$SUBSCRIPTION LOG READER.*com.datamirror.ts.util.oracle.OracleRedoNativeApi.*(Completed archive redo log file|Completed online redo log file)" | tail -1 | awk -u '
+	tail -${SINGLE_CURLING_LOG_LINES} $FILE | egrep -u -e "$SUBSCRIPTION LOG READER\{.*Thread end normal" -e "$SUBSCRIPTION has started using the single scrape staging store" -e "$SUBSCRIPTION LOG READER.*com.datamirror.ts.util.oracle.OracleRedoNativeApi.*(Completed archive redo log file|Completed online redo log file)" | tail -1 | awk -u '
 /Completed archive redo/ {
 LOG=$31
 gsub(/\./,"",LOG)
@@ -221,6 +221,10 @@ LOG_OUT=LOG
 
 /Completed online redo/ {
 LOG_OUT="REDO"
+}
+
+/LOG READER.*Thread end normal/ {
+LOG_OUT="SHARED"
 }
 
 /has started using the single scrape staging store/ {
@@ -234,7 +238,7 @@ END {
 
 	if [ "X$LOG" = "XSHARED" ]
 	then
-		log INFO "$$ Subscription $SUBSCRIPTION joined the shared scrape. Exiting"
+		log INFO "$$ Subscription $SUBSCRIPTION joined the shared scrape or was stopped. Exiting"
 		exit 0
 	fi
 
