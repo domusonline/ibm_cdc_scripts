@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.32 $
-# $Date 2017-04-26 20:49:26$
+# $Revision: 1.0.33 $
+# $Date 2017-04-26 20:50:05$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -87,7 +87,7 @@ get_args()
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.32 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.33 $" | cut -f2 -d' '`
 
 
 # Read the settings from the properties file
