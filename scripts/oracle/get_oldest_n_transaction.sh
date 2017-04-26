@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.15 $
-# $Date 2017-04-24 17:42:59$
+# $Revision: 1.0.28 $
+# $Date 2017-04-26 17:31:47$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ get_args()
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.15 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.28 $" | cut -f2 -d' '`
 
 
 # Read the settings from the properties file
@@ -114,11 +114,6 @@ then
 	exit 1
 fi
 
-log INFO "$$ Command $0 executed with parameters: $*"
-log INFO "$$ SCRIPT DIR = ${SCRIPT_DIR}"
-log INFO "$$ Local file system: ${CDC_HOME_LOCAL_FS}"
-log INFO "$$ Version: ${VERSION}"
-
 NUM_ARGUMENTS=$#
 get_args $*
 if [ $? != 0 ]
@@ -133,26 +128,31 @@ then
 	TRANSACTIONS=1
 fi
 
+TMP_FILE=/tmp/${PROGNAME}_$$_tmp
+ERR_FILE=/tmp/${PROGNAME}_$$_err
+trap clean_up 0
+
 if [ "X${LOG_FILE_FLAG}" = "X" ]
 then
 	SPOOL_CLAUSE=""
 else
+	log INFO "$$ Command $0 executed with parameters: $*"
+	log INFO "$$ SCRIPT DIR = ${SCRIPT_DIR}"
+	log INFO "$$ Local file system: ${CDC_HOME_LOCAL_FS}"
+	log INFO "$$ Version: ${VERSION}"
+
 	SPOOL_CLAUSE="spool ${TMP_FILE}"
 	LOG_FILE=${LOG_DIR}/${LOG_FILE}
+	
 fi
 
-TMP_FILE=/tmp/${PROGNAME}_$$_tmp
-ERR_FILE=/tmp/${PROGNAME}_$$_err
-trap clean_up 0
 
 if [ -f ${SCRIPT_DIR}/.oracle_env.sh ]
 then
 	. ${SCRIPT_DIR}/.oracle_env.sh
 fi
 
-
-
-sqlplus -s $ORA_U/$ORA_P 2>${ERR_FILE} <<EOF
+sqlplus -s $ORA_U/$ORA_P 1>${TMP_FILE} 2>${ERR_FILE} <<EOF
 set colsep '|'
 set echo off
 set feedback off
@@ -210,4 +210,7 @@ fi
 if [ "X${LOG_FILE_FLAG}" = "X1" ]
 then
 	cat ${TMP_FILE} >> ${LOG_FILE}
+	log INFO "$$ Exiting"
+else
+	cat ${TMP_FILE}
 fi
