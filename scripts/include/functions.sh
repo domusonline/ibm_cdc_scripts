@@ -5,8 +5,8 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.24 $
-# $Date 2017-04-26 14:45:56$
+# $Revision: 1.0.37 $
+# $Date 2017-04-27 01:52:36$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #---------------------------------------------------------------------------------------------------
 
@@ -268,8 +268,18 @@ alert_notification()
 {
 #2017-04-18 22:01:36|S|RTKS09A|23|Warning|Scrape/Refresh|There are no tables to mirror to the target system. IBM InfoSphere Data Replication will terminate.
 	l_INSTANCE=$1
-	l_CATEGORY=$2
-	l_MESSAGE="$3"
+	l_SOURCE=$2
+	l_SYSTEM=$3
+	l_EVENT=$4
+	l_CATEGORY=$5
+	l_COMPONENT=$6
+	l_MESSAGE="$7"
+
+	if [ "X${l_SOURCE}" = "XDEFAULT" ]; then l_SOURCE="M"; fi
+	if [ "X${l_SYSTEM}" = "XDEFAULT" ]; then l_SYSTEM=""; fi
+	if [ "X${l_EVENT}" = "XDEFAULT" ]; then l_EVENT="0"; fi
+	if [ "X${l_COMPONENT}" = "XDEFAULT" ]; then l_COMPONENT="Custom Monitoring"; fi
+
 	CURR_DATE=`date +"%Y-%m-%d %H:%M:%S"`
 	l_ALERT_DATA=`get_inst_alert_file ${l_INSTANCE}`
 	if [ $? != 0 ]
@@ -284,6 +294,6 @@ alert_notification()
 			l_ALERT_SEPARATOR="|"
 		fi
 
-		echo "${CURR_DATE}${l_ALERT_SEPARATOR}M${l_ALERT_SEPARATOR}0${l_ALERT_SEPARATOR}${l_CATEGORY}${l_ALERT_SEPARATOR}Custom Monitoring${l_ALERT_SEPARATOR}${l_MESSAGE}" >>${l_ALERT_FILE}
+		echo "${CURR_DATE}${l_ALERT_SEPARATOR}${l_SOURCE}${l_ALERT_SEPARATOR}${l_SYSTEM}${l_ALERT_SEPARATOR}${l_EVENT}${l_ALERT_SEPARATOR}${l_CATEGORY}${l_ALERT_SEPARATOR}${l_COMPONENT}${l_ALERT_SEPARATOR}${l_MESSAGE}" >>${l_ALERT_FILE}
 	fi
 }
