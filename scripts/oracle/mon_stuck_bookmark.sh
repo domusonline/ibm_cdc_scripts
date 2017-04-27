@@ -4,8 +4,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.39 $
-# $Date 2017-04-27 01:53:54$
+# $Revision: 1.0.41 $
+# $Date 2017-04-27 15:09:02$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #--------------------------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ show_help()
 #------------------------------------------------------------------------------
 get_args()
 {
-	arg_ok="Vhs:I:H:u:k:s:T:"
+	arg_ok="Vhs:I:H:u:k:o:T:"
 	while getopts ${arg_ok} OPTION
 	do
 		case ${OPTION} in
@@ -71,7 +71,7 @@ get_args()
 		k)      #ssh key
 			TARGET_KEY_FLAG=1
 			TARGET_KEY=$OPTARG	
-			echo ${TARGET_KEY} | grep "^[a-zA-Z][0-9a-zA-Z\.-]*$" >/dev/null
+			echo ${TARGET_KEY} | grep "^[a-zA-Z][0-9a-zA-Z\._-]*$" >/dev/null
 			if [ $? != 0 ]
 			then
 				log ERROR "$$ Syntax error - Invalid target ssh key name (${TARGET_KEY})"
@@ -90,7 +90,7 @@ get_args()
 				fi
 			fi
 			;;
-                l)      #log filename
+                o)      #log filename
 			OLDEST_LOG_FILE_FLAG=1
 			OLDEST_LOG_FILE=${OPTARG}
 			echo ${OLDEST_LOG_FILE} | grep "/" > /dev/null
@@ -136,12 +136,12 @@ get_args()
 				return 1
 			fi
 			SUBSCRIPTION_FLAG=1
-			SUBSCRIPTION=$OPTARG
-			echo ${SUBSCRIPTION} | egrep "^[a-zA-Z][a-zA-Z0-9\-_]*(,[a-zA-Z][a-zA-Z0-9\-_])*" 1>/dev/null 2>/dev/null
+			SUBSCRIPTION_LIST=$OPTARG
+			echo ${SUBSCRIPTION_LIST} | egrep "^[a-zA-Z][a-zA-Z0-9\-_]*(,[a-zA-Z][a-zA-Z0-9\-_])*" 1>/dev/null 2>/dev/null
 			RES=$?
 			if [ "X${RES}" != "X0" ]
 			then
-				log ERROR "$$ Syntax error - Subscription(s) (${SUBSCRIPTION}) is invalid" >&2
+				log ERROR "$$ Syntax error - Subscription(s) (${SUBSCRIPTION_LIST}) is invalid" >&2
 				return 1
 			fi
 			;;
@@ -314,7 +314,7 @@ TAIL_LIMIT=5000
 #-------------------------------------------------
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.39 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.41 $" | cut -f2 -d' '`
 
 TEMP_FILE_MAIL=/tmp/${PROGNAME}_mail_$$.tmp
 TEMP_FILE_BODY=/tmp/${PROGNAME}_body_$$.tmp
@@ -350,6 +350,21 @@ then
         exit 1
 fi
 
+if [ "X${SUBSCRIPTION_FLAG}" = "X1" ]
+then
+	if [ "X${INSTANCE_FLAG}" != "X1" ]
+	then
+		log ERROR "$$ Option -s can only be used with option -I and a single instance. Exiting!"
+		exit 1
+	fi
+fi
+
+if [ "X${OLDEST_LOG_FILE_FLAG}" != "X1" -o "X${TARGET_HOST_FLAG}" != "X1" -o "X${TARGET_USER_FLAG}" != "X1" -o "X${TARGET_KEY_FLAG}" != "X1" -o "X${TARGET_INSTANCE_FLAG}" != "X1" ]
+then
+	log ERROR "$$ Options -T, -u, -k, -o and -H are required. Exiting!"
+	exit 1
+fi
+
 if [ -f ${SCRIPT_DIR}/.oracle_env.sh ]
 then
 	. ${SCRIPT_DIR}/.oracle_env.sh
@@ -364,11 +379,13 @@ trap clean_up 0
 if [ "X${INSTANCE_FLAG}" = "X" ]
 then
 	#no instances were provided. Get a list of the instances
-	INSTANCES_LIST=`retrieveDefinedInstances`
+	INSTANCE_LIST=`retrieveDefinedInstances`
 	if [ $? != 0 ]
 	then
 		log ERROR "$$ Couldn't get a list of instances. Exiting!"
 		exit 1
+	else
+		log INFO "$$ Cheking bookmarks for the instances: ${INSTANCE_LIST}"
 	fi
 else
 	#One or more instances were provided
@@ -384,12 +401,14 @@ else
 				log ERROR "$$ Couldn't get a list of running subscriptions for instance ${INSTANCE_LIST}. Exiting!"
 				exit 1
 			fi
+		else
+			SUBSCRIPTION_LIST=`echo ${SUBSCRIPTION_LIST} | sed 's/,/ /g'`
 		fi
 	else
 		if [ "X${INSTANCE_FLAG}" = "X2" ]
 		then
 			#we gto multiple instances
-			INSTANCE_LIST=`echo $INSTANCE | sed 's/,//g'`
+			INSTANCE_LIST=`echo ${INSTANCE} | sed 's/,/ /g'`
 		else
 			log ERROR "$$ Invalid value for INSTANCE_FLAG. Exiting"
 			exit 1
@@ -401,7 +420,7 @@ fi
 
 DEBUG=0
 
-BOOKMARK_COMMAND=`eval "echo \$SHOWBOOKMARK_COMMAND_${TARGET_INSTANCE}"`
+BOOKMARK_COMMAND=`eval 'echo $SHOWBOOKMARK_COMMAND_'${TARGET_INSTANCE}`
 if [ "X${BOOKMARK_COMMAND}" = "X" ]
 then
 	BOOKMARK_COMMAND=${SHOWBOOKMARK_COMMAND}
@@ -411,8 +430,6 @@ then
 		exit 1
 	fi
 fi
-
-	
 
 for INSTANCE_NAME in $INSTANCE_LIST
 do
@@ -433,7 +450,7 @@ do
 		fi
 	fi
 
-	ORACLE_DEST_ID=`eval "echo \$CDC_ORACLE_DEST_ID_${INSTANCE_NAME}"`
+	ORACLE_DEST_ID=`eval 'echo $CDC_ORACLE_DEST_ID_'${INSTANCE_NAME}`
 	if [ "X${ORACLE_DEST_ID}" = "X" ]
 	then
 		ORACLE_DEST_ID=${CDC_ORACLE_DEST_ID}
@@ -445,17 +462,18 @@ do
 	fi
 	if [ "X${SUBSCRIPTION_FLAG}" = "X" ]
 	then
-		SUBSCRIPTION_LIST=`generate_subs_list $INSTANCE Running`
+		SUBSCRIPTION_LIST=`generate_subs_list $INSTANCE_NAME Running`
 		if [ $? != 0 ]
 		then
-			log ERROR "$$ Couldn't get a list of running subscriptions for instance ${INSTANCE_LIST}. Exiting!"
+			log ERROR "$$ Couldn't get a list of running subscriptions for instance ${INSTANCE_NAME}. Exiting!"
 			exit 1
 		fi
+	fi
 
 	log INFO "$$ Starting bookmark checking for instance ${INSTANCE_NAME}. Subscriptions: ${SUBSCRIPTION_LIST}"
 	for SUBSCRIPTION in $SUBSCRIPTION_LIST
 	do
-		if [ $SUBSCRIPTION = "na" ]
+		if [ "X${SUBSCRIPTION}" = "Xna" ]
 		then
 			break
 		fi
@@ -493,7 +511,7 @@ print COMMIT_STOP_INTERVAL
 
 		if [ "X${COMMIT_STOP_INTERVAL}" = "Xna" ]
 		then
-			log "$$ Bookmark OK!"
+			log INFO "$$ Subscription: ${SUBSCRIPTION} Bookmark OK!"
 			#Should we send an OK message to the notification alert file?
 			continue
 		fi
@@ -543,7 +561,7 @@ print COMMIT_STOP_INTERVAL
 				alert_notification ${INSTANCE_NAME} DEFAULT ${SUBSCRIPTION} DEFAULT "Error" "Bookmark" "Stuck bookmark (2b) in subscription ${SUBCRIPTION}. Restart: ${RESTART_POSITION} Commit: ${COMMIT_POSITION} Commit end interval: ${COMMIT_STOP_INTERVAL} Commit pos. end interval: ${COMMIT_POSITION_STOP_INTERVAL}"
 				ALERT_FLAG=1
 			else
-				log INFO "${CURRENT_DATE} Bookmark ok! Commit stop interval: ${COMMIT_STOP_INTERVAL} Commit position stop interval: ${COMMIT_POSITION_STOP_INTERVAL}"
+				log INFO "$$ Bookmark ok! Commit stop interval: ${COMMIT_STOP_INTERVAL} Commit position stop interval: ${COMMIT_POSITION_STOP_INTERVAL}"
 				#Should we send an OK message to the notification alert file?
 			fi
 		fi
@@ -551,7 +569,7 @@ print COMMIT_STOP_INTERVAL
 
 	if [ $ALERT_FLAG = 1 ]
 	then
-		if [ -r "$ALERT_FILE" ]
+		if [ -r "${ALERT_FILE}" ]
 		then
 			cat ${ALERT_FILE} | read ALERT_COUNT	
 			ALERT_COUNT=`expr ${ALERT_COUNT} + 1`
