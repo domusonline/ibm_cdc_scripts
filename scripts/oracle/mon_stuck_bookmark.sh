@@ -4,8 +4,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.36 $
-# $Date 2017-04-26 20:53:33$
+# $Revision: 1.0.39 $
+# $Date 2017-04-27 01:53:54$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #--------------------------------------------------------------------------------------------------
 
@@ -151,6 +151,12 @@ get_args()
 			;;
 		esac
 	done
+	if [ ${NUM_ARGUMENTS} -ge ${OPTIND} ]
+	then
+		log ERROR "$$ Syntax error: Too many parameters" >&2
+		return 2
+	fi
+        return 0
 }
 
 #------------------------------------------------------------------------------
@@ -196,7 +202,7 @@ alert_mail()
 	PARAM)
 		shift
 		BODY=$1
-	        ${SENDMAIL_COMMAND} ${SENDMAIL_OPTIONS} <<EOF
+	        ${SENDMAIL} ${SENDMAIL_OPTIONS} <<EOF
 FROM: $ALARM_FROM
 TO: $ALARM_TO
 CC: $ALARM_CC
@@ -222,7 +228,7 @@ EOF!
 .
 EOF!
 
-		${SENDMAIL_COMMAND} ${SENDMAIL_OPTIONS} < $TEMP_FILE_MAIL
+		${SENDMAIL} ${SENDMAIL_OPTIONS} < $TEMP_FILE_MAIL
 		;;
 	*)
 		log WARNING "$$ Invalid body type in alert_email()"
@@ -302,14 +308,13 @@ EOF
 
 TAIL_LIMIT=5000
 
-#. ${DIR_PROGRAM}/.script_config.sh
 
 #-------------------------------------------------
 # Script START
 #-------------------------------------------------
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.36 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.39 $" | cut -f2 -d' '`
 
 TEMP_FILE_MAIL=/tmp/${PROGNAME}_mail_$$.tmp
 TEMP_FILE_BODY=/tmp/${PROGNAME}_body_$$.tmp
@@ -411,7 +416,7 @@ fi
 
 for INSTANCE_NAME in $INSTANCE_LIST
 do
-	ALERT_FILE=${SCRIPT_DIR}/tmp/${PROGNAME}_${INSTANCE_NAME}
+	ALERT_FILE=${SCRIPT_DIR}/tmp/.${PROGNAME}_${INSTANCE_NAME}
 	ALERT_FLAG=0
 
 	if [ "X${OLDEST_LOG_FILE_FLAG}" = "X" ]
@@ -489,6 +494,7 @@ print COMMIT_STOP_INTERVAL
 		if [ "X${COMMIT_STOP_INTERVAL}" = "Xna" ]
 		then
 			log "$$ Bookmark OK!"
+			#Should we send an OK message to the notification alert file?
 			continue
 		fi
 
@@ -501,6 +507,12 @@ print COMMIT_STOP_INTERVAL
 			if [ "X${COMMIT_POSITION_STOP_INTERVAL}" = "Xna" ]
 			then
 				log WARNING "$$ Bookmark issue 1! Subscription online,  TX from restart position already closed and it was not possible to get current log start position"
+				echo "${CURRENT_DATE} Bookmark issue 1! Subscription ${SUBSCRIPTION} online,  TX from restart position already closed and it was not possible to get current log start position" >> ${TEMO_FILE_BODY}
+				printf "\n\n\n" >>$TEMP_FILE_BODY
+				
+				# Should send a Warning notification alert?
+				alert_notification ${INSTANCE_NAME} DEFAULT ${SUBSCRIPTION} DEFAULT "Warning" "Bookmark" "Bookmark issue (1) in subscription ${SUBCRIPTION}. Subscription online,  TX from restart position already closed and it was not possible to get current log start position"
+				ALERT_FLAG=1
 			else
 				if [ ${COMMIT_POSITION_STOP_INTERVAL} -gt ${COMMIT_STOP_INTERVAL} ]
 				then
@@ -511,24 +523,28 @@ print COMMIT_STOP_INTERVAL
 					echo "${CURRENT_DATE}      Commit end interval         : $COMMIT_STOP_INTERVAL" >> $TEMP_FILE_BODY
 					echo "${CURRENT_DATE}      Commit position end interval: $COMMIT_POSITION_STOP_INTERVAL" >> $TEMP_FILE_BODY
 					printf "\n\n\n" >>$TEMP_FILE_BODY
+					alert_notification ${INSTANCE_NAME} DEFAULT ${SUBSCRIPTION} DEFAULT "Error" "Bookmark" "Stuck bookmark (2a) in subscription ${SUBCRIPTION}. Restart: ${RESTART_POSITION} Commit: ${COMMIT_POSITION} Commit end interval: ${COMMIT_STOP_INTERVAL} Commit pos. end interval: ${COMMIT_POSITION_STOP_INTERVAL}"
 					ALERT_FLAG=1
 				else
 					log INFO "$$ Bookmark ok(2)! Commit stop interval: ${COMMIT_STOP_INTERVAL} Commit position stop interval: ${COMMIT_POSITION_STOP_INTERVAL}"
+					#Should we send an OK message to the notification alert file?
 				fi
 			fi
 		else
 			if [ ${COMMIT_POSITION_STOP_INTERVAL} -gt ${COMMIT_STOP_INTERVAL} ]
 			then
-				log WARNING "$$ Bookmark issue2b! Commit stop interval: ${COMMIT_STOP_INTERVAL} Commit position stop interval: ${COMMIT_POSITION_STOP_INTERVAL}"
+				log WARNING "$$ Bookmark issue 2b! Commit stop interval: ${COMMIT_STOP_INTERVAL} Commit position stop interval: ${COMMIT_POSITION_STOP_INTERVAL}"
 				echo "${CURRENT_DATE} Subscription $SUBSCRIPTION seems to have a stuck bookmark:" >> $TEMP_FILE_BODY
 				echo "${CURRENT_DATE}      Restart Position: $RESTART_POSITION" >> $TEMP_FILE_BODY
 				echo "${CURRENT_DATE}      Commit Position : $COMMIT_POSITION" >> $TEMP_FILE_BODY
 				echo "${CURRENT_DATE}      Commit end interval         : $COMMIT_STOP_INTERVAL" >> $TEMP_FILE_BODY
 				echo "${CURRENT_DATE}      Commit position end interval: $COMMIT_POSITION_STOP_INTERVAL" >> $TEMP_FILE_BODY
 				printf "\n\n\n" >>$TEMP_FILE_BODY
+				alert_notification ${INSTANCE_NAME} DEFAULT ${SUBSCRIPTION} DEFAULT "Error" "Bookmark" "Stuck bookmark (2b) in subscription ${SUBCRIPTION}. Restart: ${RESTART_POSITION} Commit: ${COMMIT_POSITION} Commit end interval: ${COMMIT_STOP_INTERVAL} Commit pos. end interval: ${COMMIT_POSITION_STOP_INTERVAL}"
 				ALERT_FLAG=1
 			else
 				log INFO "${CURRENT_DATE} Bookmark ok! Commit stop interval: ${COMMIT_STOP_INTERVAL} Commit position stop interval: ${COMMIT_POSITION_STOP_INTERVAL}"
+				#Should we send an OK message to the notification alert file?
 			fi
 		fi
 	done
@@ -537,18 +553,18 @@ print COMMIT_STOP_INTERVAL
 	then
 		if [ -r "$ALERT_FILE" ]
 		then
-			cat $ALERT_FILE | read ALERT_COUNT	
-			ALERT_COUNT=`expr $ALERT_COUNT + 1`
+			cat ${ALERT_FILE} | read ALERT_COUNT	
+			ALERT_COUNT=`expr ${ALERT_COUNT} + 1`
 		else
 			ALERT_COUNT=1
 		fi
-		if [ $ALERT_COUNT -le $ALERT_COUNT_LIMIT ]
+		if [ ${ALERT_COUNT} -le ${ALERT_COUNT_LIMIT} ]
 		then
 			alert_mail FILE
 		fi
-		echo $ALERT_COUNT > $ALERT_FILE
+		echo ${ALERT_COUNT} > ${ALERT_FILE}
 	else
-		rm -f $ALERT_FILE
+		rm -f ${ALERT_FILE}
 	fi
 	log INFO "$$ Finished bookmark checking for instance $INSTANCE_NAME"
 done
