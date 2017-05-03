@@ -2,8 +2,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.40 $
-# $Date 2017-04-27 10:15:00$
+# $Revision: 1.0.42 $
+# $Date 2017-05-03 11:21:53$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 
 #------------------------------------------------------------------------------
@@ -92,13 +92,13 @@ check_instance_running()
 		else
 			ALARM_COUNT=0
 		fi
-		ALARM_COUNT=`expr $ALARM_COUNT + 1`
-		echo $ALARM_COUNT > ${TMP_DIR}/.${PROGNAME}alarm_count_${RUN_INSTANCE_NAME}
+		ALARM_COUNT=`expr ${ALARM_COUNT} + 1`
+		echo $ALARM_COUNT > ${TMP_DIR}/.${PROGNAME}_alarm_count_${RUN_INSTANCE_NAME}
 		log INFO "CDC instance $RUN_INSTANCE_NAME is not running! Alarm count: $ALARM_COUNT"
 		alert_notification ${RUN_INSTANCE_NAME} DEFAULT ${RUN_INSTANCE_NAME} DEFAULT "Fatal" DEFAULT "CDC instance $RUN_INSTANCE_NAME is not running!"
-		if [ $ALARM_COUNT -le $ALARM_COUNT_LIMIT ]
+		if [ ${ALARM_COUNT} -le ${ALARM_COUNT_LIMIT} ]
 		then
-			alert_mail "$CURR_DATE CDC instance ${RUN_INSTANCE_NAME} is not running! ALARM COUNT: $ALARM_COUNT"
+			alert_mail "$CURR_DATE CDC instance ${RUN_INSTANCE_NAME} is not running! ALARM COUNT: ${ALARM_COUNT}"
 		fi
 		echo 0 > ${TMP_DIR}/.${PROGNAME}_instance_pid_${RUN_INSTANCE_NAME}
 	else
@@ -135,7 +135,7 @@ check_instance_running()
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
 TMP_DIR=${SCRIPT_DIR}/tmp
-VERSION=`echo "$Revision: 1.0.40 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.42 $" | cut -f2 -d' '`
 
 # Read the settings from the properties file
 if [ -x $SCRIPT_DIR/conf/cdc.properties ]
