@@ -2,8 +2,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.42 $
-# $Date 2017-05-03 11:21:53$
+# $Revision: 1.0.47 $
+# $Date 2017-06-22 13:21:48$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 
 #------------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 
 show_help()
 {
-        echo "${PROGNAME}: -V | -h | [-n number_txs] [-l logfile]"
+        echo "${PROGNAME}: [-V | -h]"
         echo "               -V shows script version"
         echo "               -h shows this help"
         echo "Ex: ${PROGNAME}"
@@ -135,7 +135,7 @@ check_instance_running()
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
 TMP_DIR=${SCRIPT_DIR}/tmp
-VERSION=`echo "$Revision: 1.0.42 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.47 $" | cut -f2 -d' '`
 
 # Read the settings from the properties file
 if [ -x $SCRIPT_DIR/conf/cdc.properties ]
