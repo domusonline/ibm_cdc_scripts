@@ -4,8 +4,8 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.43 $
-# $Date 2017-05-03 18:14:16$
+# $Revision: 1.0.45 $
+# $Date 2017-06-22 13:17:42$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #---------------------------------------------------------------------------------------------------
 
@@ -15,12 +15,13 @@
 #------------------------------------------------------------------------------
 show_help()
 {
-        echo "${PROGNAME}: -V | -h | [-I {INST1[,INST2...]}]"
+        echo "${PROGNAME}: -V | -h | [-I {INST1[,INST2...]} [-L num_files] [-d num_days]]"
         echo "               -V shows script version"
         echo "               -h shows this help"
 	echo "               -I defines list of comma separated instance names"
 	echo "               -L number of files in each rm invocation"
-	echo "               -d number of days to keep"
+	echo "               -d number of days to keep instance/command logs"
+	echo "               -D number of days to keep scripts logs"
         echo "Ex: ${PROGNAME} "
 }
 
@@ -29,7 +30,7 @@ show_help()
 #------------------------------------------------------------------------------
 get_args()
 {
-	arg_ok="VhI:L:d:"
+	arg_ok="VhI:L:d:D:"
 	while getopts ${arg_ok} OPTION
 	do
 		case ${OPTION} in
@@ -62,13 +63,23 @@ get_args()
 				return 1
 			fi
 			;;
-		d)   # set number of days to keep
+		d)   # set number of days to keep instance/command logs
 			NUM_DAYS_FLAG=1
 			NUM_DAYS=${OPTARG}
 			echo ${NUM_DAYS} | grep "^[1-9][0-9]*$" >/dev/null
 			if [ $? != 0 ]
 			then
 				log ERROR "$$ option -d must be used with a number"
+				return 1
+			fi
+			;;
+		D)   # set number of days to keep instance/command logs
+			SCRIPTS_NUM_DAYS_FLAG=1
+			SCRIPTS_NUM_DAYS=${OPTARG}
+			echo ${SCRIPTS_NUM_DAYS} | grep "^[1-9][0-9]*$" >/dev/null
+			if [ $? != 0 ]
+			then
+				log ERROR "$$ option -D must be used with a number"
 				return 1
 			fi
 			;;
@@ -147,14 +158,41 @@ cleanup_instance_logfiles()
 	
 }
 
+cleanup_scripts_logs()
+{
+	if [ "X${SCRIPTS_NUM_DAYS_FLAG}" = "X" ]
+	then
+		l_scripts_num_days=`eval 'echo $CDC_MAX_DAYS_SCRIPTS_LOGFILES_'${INSTANCE_NAME}`
+		if [ "X${l_num_days}" = "X" ]
+		then
+			l_num_days=`eval 'echo $CDC_MAX_DAYS_SCRIPTS_LOGFILES'`
+			if [ "X${l_num_days}" = "X" ]
+			then
+				l_num_days=${NUM_DAYS_SCRIPTS_SCRIPT_DEFAULT}
+			fi
+		fi
+	else
+		l_num_days=${SCRIPTS_NUM_DAYS}
+	fi
+	CD=`pwd`
+	cd ${LOG_DIR}
+	if [ $? != 0 ]
+	then
+		log WARNING "$$ Could not change current working dir to LOG_DIR (${LOG_DIR})"
+		return
+	fi
+	find . -regextype ${REGEXP_TYPE} -regex '\.\/*\.log$' -ctime +${l_scripts_num_days} | xargs -L ${l_num_files} rm -f
+}
+
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.43 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.45 $" | cut -f2 -d' '`
 
 
 NUM_FILES_SCRIPT_DEFAULT=1000
 NUM_DAYS_SCRIPT_DEFAULT=7
+NUM_DAYS_SCRIPTS_SCRIPT_DEFAULT=14
 
 SO=`uname -s | tr "[:upper:]" "[:lower:]"`
 case $SO in
@@ -249,4 +287,13 @@ do
 		cleanup_instance_logfiles $INSTANCE
         fi	
 done
+
+log INFO "$$ Cleaning scripts logs"
+cleanup_scripts_logs
+if [ $? = 0 ]
+then
+	log INFO "$$ Cleaned scripts logs"
+else
+	log WARNING "$$ Some issue happened while cleaning script logs"
+fi
 log INFO "$$ Exiting."
