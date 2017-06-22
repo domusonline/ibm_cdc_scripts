@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.27 $
-# $Date 2017-04-26 16:53:40$
+# $Revision: 1.0.48 $
+# $Date 2017-06-22 13:24:55$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@
 
 show_help()
 {
-        echo "${PROGNAoE}: -V | -h | [-c N ] [-K {SUB1[,SUB2]}] -I INST [-b BLOCK_SIZE] [-a READ_AHEAD_N_LOGS]"
+        echo "${PROGNAME}: -V | -h | [-c N ] [-K {SUB1[,SUB2]}] -I INST [-b BLOCK_SIZE] [-a READ_AHEAD_N_LOGS]"
         echo "               -V            shows script version"
         echo "               -h            shows this help"
 	echo "               -c N          launch up to N individual curling processes"
@@ -147,7 +147,7 @@ clean_up()
 
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.27 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.48 $" | cut -f2 -d' '`
 TEMP_FILE_CURR_CURLINGS=/tmp/${PROGNAME}_$$_curr_curlings.tmp
 
 trap clean_up 0
