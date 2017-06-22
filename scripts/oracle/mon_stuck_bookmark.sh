@@ -4,8 +4,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.41 $
-# $Date 2017-04-27 15:09:02$
+# $Revision: 1.0.49 $
+# $Date 2017-06-22 16:43:30$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #--------------------------------------------------------------------------------------------------
 
@@ -164,7 +164,7 @@ get_args()
 #------------------------------------------------------------------------------
 clean_up()
 {
-	rm -f $TEMP_FILE_MAIL $TEMP_FILE_BODY $ALERT_FILE $TEMP_FILE_AWK
+	rm -f $TEMP_FILE_MAIL $TEMP_FILE_BODY $TEMP_FILE_MAIL $TEMP_FILE_AWK
 }
 
 #------------------------------------------------------------------------------
@@ -314,7 +314,7 @@ TAIL_LIMIT=5000
 #-------------------------------------------------
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.41 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.49 $" | cut -f2 -d' '`
 
 TEMP_FILE_MAIL=/tmp/${PROGNAME}_mail_$$.tmp
 TEMP_FILE_BODY=/tmp/${PROGNAME}_body_$$.tmp
