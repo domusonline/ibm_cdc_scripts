@@ -4,8 +4,8 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.45 $
-# $Date 2017-06-22 13:17:42$
+# $Revision: 1.0.54 $
+# $Date 2017-07-05 16:31:30$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #---------------------------------------------------------------------------------------------------
 
@@ -163,16 +163,16 @@ cleanup_scripts_logs()
 	if [ "X${SCRIPTS_NUM_DAYS_FLAG}" = "X" ]
 	then
 		l_scripts_num_days=`eval 'echo $CDC_MAX_DAYS_SCRIPTS_LOGFILES_'${INSTANCE_NAME}`
-		if [ "X${l_num_days}" = "X" ]
+		if [ "X${l_scripts_num_days}" = "X" ]
 		then
-			l_num_days=`eval 'echo $CDC_MAX_DAYS_SCRIPTS_LOGFILES'`
-			if [ "X${l_num_days}" = "X" ]
+			l_scripts_num_days=`eval 'echo $CDC_MAX_DAYS_SCRIPTS_LOGFILES'`
+			if [ "X${l_scripts_num_days}" = "X" ]
 			then
-				l_num_days=${NUM_DAYS_SCRIPTS_SCRIPT_DEFAULT}
+				l_scripts_num_days=${NUM_DAYS_SCRIPTS_SCRIPT_DEFAULT}
 			fi
 		fi
 	else
-		l_num_days=${SCRIPTS_NUM_DAYS}
+		l_scripts_num_days=${SCRIPTS_NUM_DAYS}
 	fi
 	CD=`pwd`
 	cd ${LOG_DIR}
@@ -187,7 +187,7 @@ cleanup_scripts_logs()
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.45 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.54 $" | cut -f2 -d' '`
 
 
 NUM_FILES_SCRIPT_DEFAULT=1000
