@@ -4,8 +4,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.49 $
-# $Date 2017-06-22 16:43:30$
+# $Revision: 1.0.51 $
+# $Date 2017-07-05 14:56:36$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #--------------------------------------------------------------------------------------------------
 
@@ -314,7 +314,7 @@ TAIL_LIMIT=5000
 #-------------------------------------------------
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.49 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.51 $" | cut -f2 -d' '`
 
 TEMP_FILE_MAIL=/tmp/${PROGNAME}_mail_$$.tmp
 TEMP_FILE_BODY=/tmp/${PROGNAME}_body_$$.tmp
@@ -370,7 +370,6 @@ then
 	. ${SCRIPT_DIR}/.oracle_env.sh
 fi
 
-ALARM_SUBJECT="Bookmark issue in instance $INSTANCE_NAME. Check body for details."
 
 create_awk
 trap clean_up 0
@@ -385,7 +384,7 @@ then
 		log ERROR "$$ Couldn't get a list of instances. Exiting!"
 		exit 1
 	else
-		log INFO "$$ Cheking bookmarks for the instances: ${INSTANCE_LIST}"
+		log INFO "$$ Checking bookmarks for the instances: ${INSTANCE_LIST}"
 	fi
 else
 	#One or more instances were provided
@@ -435,6 +434,9 @@ for INSTANCE_NAME in $INSTANCE_LIST
 do
 	ALERT_FILE=${SCRIPT_DIR}/tmp/.${PROGNAME}_${INSTANCE_NAME}
 	ALERT_FLAG=0
+
+	ALARM_SUBJECT="Bookmark issue in instance $INSTANCE_NAME. Check body for details."
+	cat /dev/null > $TEMP_FILE_BODY
 
 	if [ "X${OLDEST_LOG_FILE_FLAG}" = "X" ]
 	then
@@ -496,10 +498,16 @@ BEGIN {
 	COMMIT_STOP_INTERVAL="na"
 }
 {
-	if ( $6 > TXSTART_STOP_INTERVAL )
+	if ( $6 ~ /^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][ 	]*$/ )
 	{
-		COMMIT_STOP_INTERVAL=$2
-		exit
+		if ( $6 > TXSTART_STOP_INTERVAL )
+		{
+			if ( $2 ~ /^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][ 	]*$/ )
+			{
+				COMMIT_STOP_INTERVAL=$2
+				exit
+			}
+		}
 	}
 }
 
