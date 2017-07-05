@@ -4,8 +4,8 @@
 # Based on previous script by Frank Ketelaars and Robert Philo
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.54 $
-# $Date 2017-07-05 16:31:30$
+# $Revision: 1.0.55 $
+# $Date 2017-07-05 16:59:31$
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #---------------------------------------------------------------------------------------------------
 
@@ -181,13 +181,13 @@ cleanup_scripts_logs()
 		log WARNING "$$ Could not change current working dir to LOG_DIR (${LOG_DIR})"
 		return
 	fi
-	find . -regextype ${REGEXP_TYPE} -regex '\.\/*\.log$' -ctime +${l_scripts_num_days} | xargs -L ${l_num_files} rm -f
+	find . -regextype ${REGEXP_TYPE} -regex '\.\/.*\.log$' -ctime +${l_scripts_num_days} | xargs -L ${l_num_files} rm -f
 }
 
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.54 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.55 $" | cut -f2 -d' '`
 
 
 NUM_FILES_SCRIPT_DEFAULT=1000
