@@ -1,0 +1,12 @@
+CHCCLP session set to cdc;
+set verbose;
+connect server
+hostname %hostname% port %port%
+username %username% password %password%;
+connect datastore name %source% context source;
+connect datastore name %target% context target;
+monitor replication filter datastore;
+disconnect datastore name %source%;
+disconnect datastore name %target%;
+disconnect server;
+exit;
