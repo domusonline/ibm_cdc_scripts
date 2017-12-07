@@ -3,8 +3,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.44 $
-# $Date 2017-06-22 12:55:55$
+# $Revision: 1.0.56 $
+# $Date: 2017-12-07 15:56:45 $
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #------------------------------------------------------------------------------
 
@@ -87,7 +87,7 @@ get_args()
 # START
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.44 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.56 $" | cut -f2 -d' '`
 
 
 # Read the settings from the properties file
@@ -173,21 +173,17 @@ $SPOOL_CLAUSE
 SELECT
 	to_char(SYSDATE,'YYYY-MM-DD HH24:MI:SS'),
 	TRIM(CAST((SYSDATE - TO_DATE('1970-01-01', 'YYYY-MM-DD')) * 86400 AS CHAR(12))),
-	t.start_scnw,t.start_scnb,
+	TO_CHAR(t.start_scn,'99999999999999999'),
 	to_char(TO_DATE(t.start_time,'MM/DD/YY HH24:MI:SS'),'YYYY-MM-DD HH24:MI:SS'),
 	TRIM(CAST((TO_DATE(t.start_time,'MM/DD/YY HH24:MI:SS') - TO_DATE('1970-01-01', 'YYYY-MM-DD')) * 86400 AS CHAR(12))),
         t.xid,
         t.used_ublk * (select block_size/1024 from dba_tablespaces where tablespace_name like '%UNDO%') size_kb,
 	t.used_urec,
-	SUBSTR(o.owner,1,20) o_owner,
-	SUBSTR(o.object_name,1,32) oname,
         t.status,
 	s.sid,
         s.username
 FROM
 	v\$transaction t INNER JOIN  v\$session s ON (t.ses_addr = s.saddr)
-	LEFT JOIN v\$locked_object l ON (s.sid = l.session_id)
-	LEFT JOIN  dba_objects o ON l.object_id = o.object_id
 WHERE
 	t.xid IN
 	(
@@ -203,7 +199,7 @@ WHERE
 			ROWNUM <= $TRANSACTIONS
 	)
 ORDER BY
-        t.start_time, oname;
+        t.start_time;
 EOF
 
 if [ $? != 0 ]

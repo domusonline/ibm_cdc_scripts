@@ -4,8 +4,8 @@
 # Copyright (c) 2017 Fernando Nunes
 # License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 # $Author: Fernando Nunes - domusonline@gmail.com $
-# $Revision: 1.0.51 $
-# $Date 2017-07-05 14:56:36$
+# $Revision: 1.0.56 $
+# $Date: 2017-12-07 15:56:45 $
 # Disclaimer: This software is provided AS IS, without any kind of guarantee. Use at your own risk.
 #--------------------------------------------------------------------------------------------------
 
@@ -314,7 +314,7 @@ TAIL_LIMIT=5000
 #-------------------------------------------------
 PROGNAME=`basename $0`
 SCRIPT_DIR=`dirname $0`
-VERSION=`echo "$Revision: 1.0.51 $" | cut -f2 -d' '`
+VERSION=`echo "$Revision: 1.0.56 $" | cut -f2 -d' '`
 
 TEMP_FILE_MAIL=/tmp/${PROGNAME}_mail_$$.tmp
 TEMP_FILE_BODY=/tmp/${PROGNAME}_body_$$.tmp
@@ -498,11 +498,11 @@ BEGIN {
 	COMMIT_STOP_INTERVAL="na"
 }
 {
-	if ( $6 ~ /^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][ 	]*$/ )
+	if ( $5 ~ /^[ 	]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][ 	]*$/ )
 	{
-		if ( $6 > TXSTART_STOP_INTERVAL )
+		if ( $5 > TXSTART_STOP_INTERVAL )
 		{
-			if ( $2 ~ /^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][ 	]*$/ )
+			if ( $2 ~ /^[ 	]*[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][ 	]*$/ )
 			{
 				COMMIT_STOP_INTERVAL=$2
 				exit
