@@ -24,10 +24,10 @@ The compilation is very simple and "crude". Just copy the asset *.java files, se
 javac -cp IIDR_INSTALL_DIR/lib/ts.jar AlertFileHandler.java UETrace.java
 
 ### Installation and configuration
-1- Copy the *.class files into IIDR_INSTALL_DIR/lib/user
-2- Copy the alertfile.properties file to the instance "conf" directory or to any other place pointed by ALERT_PROP_FILE environment variable
-3- Use Management Console (GUI) to configure the AlertFileHandler class for notifications
-4- Try it
+1- Copy the *.class files into IIDR_INSTALL_DIR/lib/user<br/>
+2- Copy the alertfile.properties file to the instance "conf" directory or to any other place pointed by ALERT_PROP_FILE environment variable<br/>
+3- Use Management Console (GUI) to configure the AlertFileHandler class for notifications<br/>
+4- Try it<br/>
 
 
 ### list of assets published
