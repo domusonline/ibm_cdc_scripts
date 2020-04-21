@@ -2,8 +2,8 @@
 ** Latest change: 2017 Fernando Nunes
 ** License: This script is licensed as Apache ( http://www.apache.org/licenses/LICENSE-2.0.html )
 ** $Author: Fernando Nunes - domusonline@gmail.com $
-** $Revision: 1.0.25 $
-** $Date 2017-04-26 15:37:46$
+** $Revision: 1.0.60 $
+** $Date: 2020-04-21 15:55:20 $
 ** Requires UETrace.java
 **
 ** Based on the samples provided by IBM:
@@ -74,14 +74,14 @@ public class AlertFileHandler implements AlertHandlerIF
 		} 
 		catch (IOException e) 
 		{ 
-			properties.setProperty("file", "cdc_alert_file");
+			properties.setProperty("file", "iidr_alert_file.log");
 			properties.setProperty("size", "10000");
 			properties.setProperty("separator", "|");
 			properties.setProperty("warning_ids", "");
 			properties.setProperty("minimum_category","5");
 		} 
 	   
-		this.logFileName = properties.getProperty("file", "cdc_alert_file"); 
+		this.logFileName = properties.getProperty("file", "iidr_alert_file.log"); 
 		this.separator = properties.getProperty("separator","|");
 		this.size = new Long(properties.getProperty("size", "10000"));
 		String warningIDs = properties.getProperty("warning_ids","");
@@ -93,7 +93,7 @@ public class AlertFileHandler implements AlertHandlerIF
 		   
 			for (int i = 0; i < tmpWarnings.length; ++i)
 			{
-				this.warningIdList.add(new Integer(tmpWarnings[i]));
+				this.warningIdList.add(new Integer(tmpWarnings[i].trim()));
 			}
 		}
 	}
@@ -113,7 +113,7 @@ public class AlertFileHandler implements AlertHandlerIF
 	  
 			if ( (newCategoryID == 6) || (newCategoryID <= this.minimumCategory) )
 			{
-				FileOutputStream fos = new FileOutputStream(this.logFileName+".log", true);
+				FileOutputStream fos = new FileOutputStream(this.logFileName, true);
      	 
 				OutputStreamWriter osw = new OutputStreamWriter(fos);
 				BufferedWriter bw = new BufferedWriter(osw);
@@ -140,7 +140,7 @@ public class AlertFileHandler implements AlertHandlerIF
      	 
 				SimpleDateFormat DF2 = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
      	 
-				File file = new File(this.logFileName+".log"); 
+				File file = new File(this.logFileName); 
      	 
 				if (file.length() > this.size.longValue()*1024)
 				{
